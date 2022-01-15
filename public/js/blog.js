@@ -24,8 +24,22 @@ const setupBlog = (data) => {
     banner.style.backgroundImage = `url(${data.bannerImage})`;
 
     titleTag.innerHTML += blogTitle.innerHTML = data.title;
-    publish.innerHTML  += data.publishedAt
+    publish.innerHTML  += data.publishedAt;
+    publish.innerHTML  += ` -- ${data.author ? data.author : "Unknown"}`;
 
+    try{
+        
+        if(data.author == auth.currentUser.email.split('@')[0] ) {
+            let editBtn = document.getElementById('edit-blog-btn');
+            editBtn.style.display = 'inline';
+            editBtn.href = `${blogId}/editor`;
+        }
+
+    } catch(err) {
+        //no user logged in
+        console.log('no user logged in');
+    }
+    
     addArticle( article, data.article );
 
 }

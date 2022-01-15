@@ -39,15 +39,23 @@ app.post('/upload', (req, res) => {
     }    
 });
 
+app.get('/admin', (req, res) => {
+    res.sendFile( path.join(initialPath, 'dashboard.html') )
+});
+
 app.get('/:blog', (req, res) => {
     res.sendFile( path.join(initialPath, 'blog.html') )
+});
+
+app.get( '/:blog/editor', (req, res) => {
+    res.sendFile( path.join(initialPath, 'editor.html') );
 });
 
 app.use((req, res) => {
     res.json('404')
 });
 
-app.listen("3000", () => {
+app.listen(process.env.PORT || 3000, () => {
     console.log("listening...");
 })
 

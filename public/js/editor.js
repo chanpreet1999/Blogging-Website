@@ -39,15 +39,12 @@ const uploadImage = (uploadFile, uploadType) => {
                     bannerPath = `${location.origin}/${data}`;
                     banner.style.backgroundImage = `url("${bannerPath}")`
                 }
-
             })
-
     } 
     else {
         alert('upload image only');
     }
 }
-
 
 const addImage = (imagePath, alt) => {
     let curPos = articleField.selectionStart;
@@ -58,16 +55,22 @@ const addImage = (imagePath, alt) => {
 
 publishBtn.addEventListener('click', () => {
     if(articleField.value.length && blogTitleField.value.length) {
-        let blogTitle = blogTitleField.value.split(' ').join('-');
-        let id = '';
-        let letters = 'abcdefghijklmnopqrstuvwxyz';
-        for(let i = 0; i < 4; i++) {
-            id += letters[ Math.floor( Math.random() * letters.length ) ]
+        let docName;
+        if(blogID[0] == 'editor') {
+            let letters = 'abcdefghijklmnopqrstuvwxyz';
+            let blogTitle = blogTitleField.value.split(' ').join('-');
+            let id = '';
+            for(let i = 0; i < 4; i++) {
+                id += letters[ Math.floor( Math.random() * letters.length ) ]
+            }
+
+            // doc name
+            docName = `${blogTitle}-${id}`;
         }
-
-        // doc name
-        let docName = `${blogTitle}-${id}`;
-
+        else {
+            docName = decodeURI(blogID[0])
+        }
+        
         let date = new Date(); // for publish info
         
         //access firestore with db
@@ -75,7 +78,8 @@ publishBtn.addEventListener('click', () => {
             title: blogTitleField.value,
             article: articleField.value,
             bannerImage: bannerPath,
-            publishedAt: `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}` // getmonth returns an integer month
+            publishedAt: `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`, // getmonth returns an integer month
+            author : auth.currentUser.email.split('@')[0]
         })
         .then( () => {
             console.log('Date entered');
@@ -86,3 +90,36 @@ publishBtn.addEventListener('click', () => {
         })
     }
 })
+
+//check if user logged in
+auth.onAuthStateChanged( (user) => {
+    if(!user) {
+        location.replace('/auth');  // redirect to login page
+    }
+})
+
+//checking for existing blog edits
+let blogID = location.pathname.split('/');
+try{
+    blogID.shift();
+}
+catch(err) {
+    console.log('error encountered while checking if the blog esists or not');
+}
+
+if(blogID[0] != 'editor') {
+    //it is an existing blog
+    db.collection('blogs').doc( decodeURI( blogID[0]) ).get().then( (doc) => {
+      
+        if(doc.exists) {
+            let data = doc.data();
+            bannerPath = data.bannerImage;
+            banner.style.backgroundImage = `url(${bannerPath})`;
+            blogTitleField.value = data.title;
+            articleField.value = data.article;  
+        }
+        else {
+            location.replace('/') // home page
+        }
+    }) 
+}
